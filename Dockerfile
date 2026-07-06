@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 RUN apk add --no-cache git
 
+RUN git config --global user.email "autodeploy@local" && \
+    git config --global user.name "AutoDeploy"
+
 WORKDIR /app
 
 COPY package*.json ./
