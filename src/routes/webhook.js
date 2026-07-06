@@ -12,23 +12,28 @@ function loadProjects() {
 }
 
 router.post('/:token', async (req, res) => {
-  const { token } = req.params;
-  const projects = loadProjects();
-  const project = projects.find(p => p.webhookToken === token);
+  try {
+    const { token } = req.params;
+    const projects = loadProjects();
+    const project = projects.find(p => p.webhookToken === token);
 
-  if (!project) {
-    return res.status(404).json({ error: 'Invalid webhook token' });
+    if (!project) {
+      return res.status(404).json({ error: 'Invalid webhook token' });
+    }
+
+    console.log(`Webhook triggered for project: ${project.name}`);
+
+    const result = await triggerGitOperations(
+      project.folderPath,
+      project.sourceBranch,
+      project.targetBranch
+    );
+
+    res.json({ project: project.name, ...result });
+  } catch (err) {
+    console.error('Webhook error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  console.log(`Webhook triggered for project: ${project.name}`);
-
-  const result = await triggerGitOperations(
-    project.folderPath,
-    project.sourceBranch,
-    project.targetBranch
-  );
-
-  res.json({ project: project.name, ...result });
 });
 
 module.exports = router;

@@ -82,20 +82,25 @@ router.delete('/:id', (req, res) => {
 });
 
 router.post('/:id/trigger', async (req, res) => {
-  const projects = loadProjects();
-  const project = projects.find(p => p.id === req.params.id);
+  try {
+    const projects = loadProjects();
+    const project = projects.find(p => p.id === req.params.id);
 
-  if (!project) {
-    return res.status(404).json({ error: 'Project not found' });
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const result = await triggerGitOperations(
+      project.folderPath,
+      project.sourceBranch,
+      project.targetBranch
+    );
+
+    res.json(result);
+  } catch (err) {
+    console.error('Trigger error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  const result = await triggerGitOperations(
-    project.folderPath,
-    project.sourceBranch,
-    project.targetBranch
-  );
-
-  res.json(result);
 });
 
 module.exports = router;
