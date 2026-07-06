@@ -110,4 +110,31 @@ router.post('/register', requireAuth, requireAdmin, (req, res) => {
   res.json({ success: true, username });
 });
 
+router.get('/accounts', requireAuth, requireAdmin, (req, res) => {
+  const accounts = loadAccounts();
+  const list = accounts.map((a, i) => ({
+    username: a.username,
+    admin: a.admin || i === 0,
+    createdAt: a.createdAt
+  }));
+  res.json(list);
+});
+
+router.delete('/accounts/:username', requireAuth, requireAdmin, (req, res) => {
+  const accounts = loadAccounts();
+  const index = accounts.findIndex(a => a.username === req.params.username);
+
+  if (index === -1) {
+    return res.status(404).json({ error: 'Account not found' });
+  }
+
+  if (accounts.length === 1) {
+    return res.status(400).json({ error: 'Cannot delete the only account' });
+  }
+
+  accounts.splice(index, 1);
+  saveAccounts(accounts);
+  res.json({ success: true });
+});
+
 module.exports = router;

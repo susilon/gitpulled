@@ -6,6 +6,36 @@ async function init() {
     window.location.href = '/dashboard.html';
     return;
   }
+
+  loadAccounts();
+}
+
+async function loadAccounts() {
+  const res = await fetch('/api/auth/accounts');
+  const accounts = await res.json();
+  const el = document.getElementById('accounts-list');
+
+  if (accounts.length === 0) {
+    el.innerHTML = '<p>No accounts found.</p>';
+    return;
+  }
+
+  el.innerHTML = accounts.map(a => `
+    <div class="project-item">
+      <h3>${esc(a.username)}</h3>
+      <div class="project-detail">${a.admin ? 'Admin' : 'User'}</div>
+      <div class="project-detail">Created: ${a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A'}</div>
+      <div class="project-actions">
+        ${!a.admin ? `<button class="btn btn-sm btn-danger" onclick="deleteAccount('${esc(a.username)}')">Delete</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
 }
 
 async function createAccount() {
@@ -34,8 +64,26 @@ async function createAccount() {
     msgEl.className = 'success';
     document.getElementById('username').value = '';
     document.getElementById('password').value = '';
+    loadAccounts();
   } else {
     msgEl.textContent = data.error || 'Failed to create account';
+  }
+}
+
+async function deleteAccount(username) {
+  const result = await Swal.fire({
+    title: 'Delete Account?',
+    text: `Delete user "${username}"?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#e94560',
+    confirmButtonText: 'Delete'
+  });
+
+  if (result.isConfirmed) {
+    await fetch(`/api/auth/accounts/${username}`, { method: 'DELETE' });
+    loadAccounts();
+    Swal.fire('Deleted', 'Account deleted', 'success');
   }
 }
 
