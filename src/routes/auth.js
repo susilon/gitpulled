@@ -40,8 +40,9 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  req.session.user = { username: account.username, admin: account.admin || false };
-  res.json({ success: true, username: account.username, admin: account.admin || false });
+  const isAdmin = account.admin || accounts[0].username === account.username;
+  req.session.user = { username: account.username, admin: isAdmin };
+  res.json({ success: true, username: account.username, admin: isAdmin });
 });
 
 router.post('/logout', (req, res) => {
