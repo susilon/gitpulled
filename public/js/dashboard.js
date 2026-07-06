@@ -52,105 +52,135 @@ function esc(str) {
   return d.innerHTML;
 }
 
+function showProjectForm(project = null) {
+  const isEdit = project !== null;
+  const html = `
+    <div class="swal-form-row">
+      <div class="swal-form-group">
+        <label>Project Name</label>
+        <input type="text" id="swal-proj-name" class="swal2-input" placeholder="My Project" value="${isEdit ? esc(project.name) : ''}">
+      </div>
+      <div class="swal-form-group">
+        <label>Folder Path</label>
+        <input type="text" id="swal-proj-folder" class="swal2-input" placeholder="/path/to/repo" value="${isEdit ? esc(project.folderPath) : ''}">
+      </div>
+    </div>
+    <div class="swal-form-row">
+      <div class="swal-form-group">
+        <label>Source Branch</label>
+        <input type="text" id="swal-proj-source" class="swal2-input" placeholder="main" value="${isEdit ? esc(project.sourceBranch) : ''}">
+      </div>
+      <div class="swal-form-group">
+        <label>Target Branch</label>
+        <input type="text" id="swal-proj-target" class="swal2-input" placeholder="develop" value="${isEdit ? esc(project.targetBranch) : ''}">
+      </div>
+    </div>
+    <div class="swal-form-row">
+      <div class="swal-form-group" style="flex:2">
+        <label>Compose File (optional)</label>
+        <input type="text" id="swal-proj-compose" class="swal2-input" placeholder="docker-compose.yml" value="${isEdit ? esc(project.composeFile || 'docker-compose.yml') : 'docker-compose.yml'}">
+      </div>
+      <div class="swal-form-group" style="flex:1; display:flex; align-items:center; gap:8px; padding-top:24px">
+        <input type="checkbox" id="swal-proj-docker" ${isEdit && project.dockerRebuild ? 'checked' : ''}>
+        <label for="swal-proj-docker" style="margin:0; font-size:0.9em; color:#aaa">Docker Rebuild</label>
+      </div>
+    </div>
+  `;
+
+  Swal.fire({
+    title: isEdit ? 'Edit Project' : 'Add Project',
+    html: html,
+    showCancelButton: true,
+    confirmButtonText: 'Save',
+    customClass: 'swal-popup-wide',
+    preConfirm: () => {
+      const name = document.getElementById('swal-proj-name').value;
+      const folderPath = document.getElementById('swal-proj-folder').value;
+      const sourceBranch = document.getElementById('swal-proj-source').value;
+      const targetBranch = document.getElementById('swal-proj-target').value;
+
+      if (!name || !folderPath || !sourceBranch || !targetBranch) {
+        Swal.showValidationMessage('All fields are required');
+        return false;
+      }
+
+      return {
+        name,
+        folderPath,
+        sourceBranch,
+        targetBranch,
+        composeFile: document.getElementById('swal-proj-compose').value || 'docker-compose.yml',
+        dockerRebuild: document.getElementById('swal-proj-docker').checked
+      };
+    }
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      const payload = result.value;
+
+      if (isEdit) {
+        await fetch(`/api/projects/${project.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      loadProjects();
+      Swal.fire('Saved', isEdit ? 'Project updated' : 'Project added', 'success');
+    }
+  });
+}
+
 function showAddForm() {
-  document.getElementById('edit-id').value = '';
-  document.getElementById('form-title').textContent = 'Add Project';
-  document.getElementById('proj-name').value = '';
-  document.getElementById('proj-folder').value = '';
-  document.getElementById('proj-source').value = '';
-  document.getElementById('proj-target').value = '';
-  document.getElementById('proj-compose').value = 'docker-compose.yml';
-  document.getElementById('proj-docker').checked = false;
-  document.getElementById('project-form').style.display = 'block';
+  showProjectForm();
 }
 
 function editProject(id) {
   const p = projects.find(x => x.id === id);
-  if (!p) return;
-
-  document.getElementById('edit-id').value = id;
-  document.getElementById('form-title').textContent = 'Edit Project';
-  document.getElementById('proj-name').value = p.name;
-  document.getElementById('proj-folder').value = p.folderPath;
-  document.getElementById('proj-source').value = p.sourceBranch;
-  document.getElementById('proj-target').value = p.targetBranch;
-  document.getElementById('proj-compose').value = p.composeFile || 'docker-compose.yml';
-  document.getElementById('proj-docker').checked = p.dockerRebuild || false;
-  document.getElementById('project-form').style.display = 'block';
-}
-
-function hideForm() {
-  document.getElementById('project-form').style.display = 'none';
-}
-
-async function saveProject() {
-  const id = document.getElementById('edit-id').value;
-  const payload = {
-    name: document.getElementById('proj-name').value,
-    folderPath: document.getElementById('proj-folder').value,
-    sourceBranch: document.getElementById('proj-source').value,
-    targetBranch: document.getElementById('proj-target').value,
-    dockerRebuild: document.getElementById('proj-docker').checked,
-    composeFile: document.getElementById('proj-compose').value || 'docker-compose.yml'
-  };
-
-  if (!payload.name || !payload.folderPath || !payload.sourceBranch || !payload.targetBranch) {
-    showToast('All fields are required', 'error');
-    return;
-  }
-
-  if (id) {
-    await fetch(`/api/projects/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  } else {
-    await fetch('/api/projects', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  }
-
-  hideForm();
-  loadProjects();
-  showToast(id ? 'Project updated' : 'Project added', 'success');
+  if (p) showProjectForm(p);
 }
 
 async function deleteProject(id) {
-  if (!confirm('Delete this project?')) return;
+  const result = await Swal.fire({
+    title: 'Delete Project?',
+    text: 'This action cannot be undone',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#e94560',
+    confirmButtonText: 'Delete'
+  });
 
-  await fetch(`/api/projects/${id}`, { method: 'DELETE' });
-  loadProjects();
-  showToast('Project deleted', 'success');
+  if (result.isConfirmed) {
+    await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+    loadProjects();
+    Swal.fire('Deleted', 'Project deleted', 'success');
+  }
 }
 
 async function triggerProject(id) {
-  showToast('Running git operations...', 'success');
+  Swal.fire({ title: 'Running git operations...', didOpen: () => Swal.showLoading() });
+
   const res = await fetch(`/api/projects/${id}/trigger`, { method: 'POST' });
   const data = await res.json();
 
   if (data.success) {
     let msg = 'Git operations completed';
     if (data.dockerRebuild) msg += ' + Docker rebuild';
-    showToast(msg, 'success');
+    Swal.fire('Success', msg, 'success');
   } else {
-    showToast('Error: ' + (data.error || 'Unknown error'), 'error');
+    Swal.fire('Error', data.error || 'Unknown error', 'error');
   }
 }
 
 async function logout() {
   await fetch('/api/auth/logout', { method: 'POST' });
   window.location.href = '/index.html';
-}
-
-function showToast(msg, type) {
-  const toast = document.createElement('div');
-  toast.className = 'toast ' + type;
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
 }
 
 init();

@@ -213,3 +213,36 @@ code {
   border-radius: 3px;
   font-size: 0.9em;
 }
+
+.swal-popup-wide {
+  width: 600px;
+}
+
+.swal-form-row {
+  display: flex;
+  gap: 12px;
+  text-align: left;
+  margin-bottom: 0;
+}
+
+.swal-form-group {
+  flex: 1;
+  margin-bottom: 8px;
+}
+
+.swal-form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.85em;
+  color: #666;
+  text-align: left;
+}
+
+.swal2-input {
+  width: 100% !important;
+  font-size: 14px !important;
+}
+
+.swal2-html label {
+  text-align: left;
+}
