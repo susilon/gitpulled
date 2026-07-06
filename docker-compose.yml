@@ -8,6 +8,11 @@ services:
       - "3000:3000"
     volumes:
       - ./data:/app/data
+      # Bind mount your host folders here so the container can access them
+      # Add each project's git repo folder, e.g.:
+      # - /home/user/projects/my-repo:/home/user/projects/my-repo
+      # Or mount a parent directory to access all repos:
+      - /:/host
     environment:
       - PORT=3000
       - SESSION_SECRET=your-secret-key-change-in-production
