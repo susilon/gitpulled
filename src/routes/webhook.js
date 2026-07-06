@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { triggerGitOperations } = require('../services/git');
+const { dockerRebuild } = require('../services/docker');
 
 const router = express.Router();
 const DATA_FILE = path.join(__dirname, '../../data/projects.json');
@@ -28,6 +29,16 @@ router.post('/:token', async (req, res) => {
       project.sourceBranch,
       project.targetBranch
     );
+
+    if (result.success && project.dockerRebuild) {
+      try {
+        await dockerRebuild(project.folderPath, project.composeFile);
+        result.dockerRebuild = true;
+      } catch (dockerErr) {
+        result.dockerRebuild = false;
+        result.dockerError = dockerErr.message;
+      }
+    }
 
     res.json({ project: project.name, ...result });
   } catch (err) {

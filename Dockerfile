@@ -1,6 +1,6 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git docker-cli docker-cli-compose
 
 RUN git config --global user.email "autodeploy@local" && \
     git config --global user.name "AutoDeploy"

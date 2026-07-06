@@ -46,6 +46,16 @@
             <input type="text" id="proj-target" placeholder="develop">
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:2">
+            <label>Compose File (optional)</label>
+            <input type="text" id="proj-compose" placeholder="docker-compose.yml">
+          </div>
+          <div class="form-group" style="flex:1; display:flex; align-items:flex-end; gap:8px">
+            <input type="checkbox" id="proj-docker" style="width:auto">
+            <label for="proj-docker" style="margin:0; font-size:0.9em; color:#aaa">Docker Rebuild</label>
+          </div>
+        </div>
         <div class="form-actions">
           <button class="btn" onclick="saveProject()">Save</button>
           <button class="btn btn-secondary" onclick="hideForm()">Cancel</button>

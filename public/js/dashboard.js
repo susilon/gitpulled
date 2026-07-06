@@ -35,6 +35,7 @@ function renderProjects() {
       <h3>${esc(p.name)}</h3>
       <div class="project-detail">Folder: ${esc(p.folderPath)}</div>
       <div class="project-detail">Source: ${esc(p.sourceBranch)} → Target: ${esc(p.targetBranch)}</div>
+      ${p.dockerRebuild ? '<div class="project-detail">Docker: Rebuild after merge</div>' : ''}
       <div class="project-detail">Webhook: <span class="webhook-token">${esc(p.webhookToken)}</span></div>
       <div class="project-actions">
         <button class="btn btn-sm" onclick="triggerProject('${p.id}')">Trigger</button>
@@ -58,6 +59,8 @@ function showAddForm() {
   document.getElementById('proj-folder').value = '';
   document.getElementById('proj-source').value = '';
   document.getElementById('proj-target').value = '';
+  document.getElementById('proj-compose').value = 'docker-compose.yml';
+  document.getElementById('proj-docker').checked = false;
   document.getElementById('project-form').style.display = 'block';
 }
 
@@ -71,6 +74,8 @@ function editProject(id) {
   document.getElementById('proj-folder').value = p.folderPath;
   document.getElementById('proj-source').value = p.sourceBranch;
   document.getElementById('proj-target').value = p.targetBranch;
+  document.getElementById('proj-compose').value = p.composeFile || 'docker-compose.yml';
+  document.getElementById('proj-docker').checked = p.dockerRebuild || false;
   document.getElementById('project-form').style.display = 'block';
 }
 
@@ -84,7 +89,9 @@ async function saveProject() {
     name: document.getElementById('proj-name').value,
     folderPath: document.getElementById('proj-folder').value,
     sourceBranch: document.getElementById('proj-source').value,
-    targetBranch: document.getElementById('proj-target').value
+    targetBranch: document.getElementById('proj-target').value,
+    dockerRebuild: document.getElementById('proj-docker').checked,
+    composeFile: document.getElementById('proj-compose').value || 'docker-compose.yml'
   };
 
   if (!payload.name || !payload.folderPath || !payload.sourceBranch || !payload.targetBranch) {
@@ -125,7 +132,9 @@ async function triggerProject(id) {
   const data = await res.json();
 
   if (data.success) {
-    showToast('Git operations completed successfully', 'success');
+    let msg = 'Git operations completed';
+    if (data.dockerRebuild) msg += ' + Docker rebuild';
+    showToast(msg, 'success');
   } else {
     showToast('Error: ' + (data.error || 'Unknown error'), 'error');
   }

@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { triggerGitOperations } = require('../services/git');
+const { dockerRebuild } = require('../services/docker');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -27,7 +28,7 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, folderPath, sourceBranch, targetBranch } = req.body;
+  const { name, folderPath, sourceBranch, targetBranch, dockerRebuild: doDockerRebuild, composeFile } = req.body;
   if (!name || !folderPath || !sourceBranch || !targetBranch) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -39,6 +40,8 @@ router.post('/', (req, res) => {
     folderPath,
     sourceBranch,
     targetBranch,
+    dockerRebuild: doDockerRebuild || false,
+    composeFile: composeFile || 'docker-compose.yml',
     webhookToken: crypto.randomBytes(16).toString('hex'),
     createdAt: new Date().toISOString()
   };
@@ -49,7 +52,7 @@ router.post('/', (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-  const { name, folderPath, sourceBranch, targetBranch } = req.body;
+  const { name, folderPath, sourceBranch, targetBranch, dockerRebuild: doDockerRebuild, composeFile } = req.body;
   const projects = loadProjects();
   const index = projects.findIndex(p => p.id === req.params.id);
 
@@ -62,7 +65,9 @@ router.put('/:id', (req, res) => {
     name: name || projects[index].name,
     folderPath: folderPath || projects[index].folderPath,
     sourceBranch: sourceBranch || projects[index].sourceBranch,
-    targetBranch: targetBranch || projects[index].targetBranch
+    targetBranch: targetBranch || projects[index].targetBranch,
+    dockerRebuild: doDockerRebuild !== undefined ? doDockerRebuild : projects[index].dockerRebuild,
+    composeFile: composeFile || projects[index].composeFile
   };
 
   saveProjects(projects);
@@ -95,6 +100,16 @@ router.post('/:id/trigger', async (req, res) => {
       project.sourceBranch,
       project.targetBranch
     );
+
+    if (result.success && project.dockerRebuild) {
+      try {
+        await dockerRebuild(project.folderPath, project.composeFile);
+        result.dockerRebuild = true;
+      } catch (dockerErr) {
+        result.dockerRebuild = false;
+        result.dockerError = dockerErr.message;
+      }
+    }
 
     res.json(result);
   } catch (err) {
