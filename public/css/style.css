@@ -218,6 +218,15 @@ code {
   width: 600px;
 }
 
+.swal-popup-wide .swal2-popup {
+  background: #fff;
+  color: #333;
+}
+
+.swal-popup-wide .swal2-title {
+  color: #333;
+}
+
 .swal-form-row {
   display: flex;
   gap: 12px;
@@ -234,15 +243,36 @@ code {
   display: block;
   margin-bottom: 4px;
   font-size: 0.85em;
-  color: #666;
+  color: #555;
   text-align: left;
 }
 
 .swal2-input {
   width: 100% !important;
   font-size: 14px !important;
+  background: #fff !important;
+  color: #333 !important;
+  border: 1px solid #ccc !important;
+  border-radius: 4px !important;
+}
+
+.swal2-input:focus {
+  border-color: #e94560 !important;
+  box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.2) !important;
 }
 
 .swal2-html label {
   text-align: left;
+}
+
+.swal-popup-wide .swal2-actions .swal2-confirm {
+  background: #e94560 !important;
+}
+
+.swal-popup-wide .swal2-actions .swal2-cancel {
+  background: #666 !important;
+}
+
+.swal-popup-wide .swal2-html {
+  color: #333 !important;
 }
