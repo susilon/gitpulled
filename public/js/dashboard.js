@@ -10,6 +10,9 @@ async function init() {
   }
 
   document.getElementById('username-display').textContent = data.username;
+  if (data.admin) {
+    document.getElementById('admin-link').style.display = 'inline-block';
+  }
   loadProjects();
 }
 

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoDeploy - Account Management</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>AutoDeploy</h1>
+      <div class="user-info">
+        <a href="/dashboard.html" class="btn btn-sm btn-secondary">Back to Dashboard</a>
+        <button class="btn btn-sm" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Create New Account</h2>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter username">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter password">
+      </div>
+      <button class="btn" onclick="createAccount()">Create Account</button>
+      <div id="msg" class="error"></div>
+    </div>
+
+    <div class="card">
+      <h2>Existing Accounts</h2>
+      <div id="accounts-list">Loading...</div>
+    </div>
+  </div>
+  <script src="js/account.js"></script>
+</body>
+</html>

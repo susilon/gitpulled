@@ -17,6 +17,16 @@ function saveAccounts(accounts) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(accounts, null, 2));
 }
 
+function requireAuth(req, res, next) {
+  if (req.session && req.session.user) return next();
+  return res.status(401).json({ error: 'Unauthorized' });
+}
+
+function requireAdmin(req, res, next) {
+  if (req.session && req.session.user && req.session.user.admin) return next();
+  return res.status(403).json({ error: 'Admin access required' });
+}
+
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -30,8 +40,8 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  req.session.user = { username: account.username };
-  res.json({ success: true, username: account.username });
+  req.session.user = { username: account.username, admin: account.admin || false };
+  res.json({ success: true, username: account.username, admin: account.admin || false });
 });
 
 router.post('/logout', (req, res) => {
@@ -42,12 +52,39 @@ router.post('/logout', (req, res) => {
 
 router.get('/status', (req, res) => {
   if (req.session && req.session.user) {
-    return res.json({ loggedIn: true, username: req.session.user.username });
+    return res.json({
+      loggedIn: true,
+      username: req.session.user.username,
+      admin: req.session.user.admin || false
+    });
   }
   res.json({ loggedIn: false });
 });
 
-router.post('/register', (req, res) => {
+router.post('/setup', (req, res) => {
+  const accounts = loadAccounts();
+  if (accounts.length > 0) {
+    return res.status(400).json({ error: 'Admin account already exists' });
+  }
+
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+
+  accounts.push({
+    username,
+    password: hashPassword(password),
+    admin: true,
+    createdAt: new Date().toISOString()
+  });
+  saveAccounts(accounts);
+
+  req.session.user = { username, admin: true };
+  res.json({ success: true, username });
+});
+
+router.post('/register', requireAuth, requireAdmin, (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
@@ -61,11 +98,11 @@ router.post('/register', (req, res) => {
   accounts.push({
     username,
     password: hashPassword(password),
+    admin: false,
     createdAt: new Date().toISOString()
   });
   saveAccounts(accounts);
 
-  req.session.user = { username };
   res.json({ success: true, username });
 });
 

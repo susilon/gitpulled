@@ -127,6 +127,12 @@ input:focus {
   font-size: 14px;
 }
 
+.success {
+  color: #2d8f4e;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
