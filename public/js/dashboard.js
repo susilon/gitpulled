@@ -94,10 +94,11 @@ function showProjectForm(project = null) {
     confirmButtonText: 'Save',
     customClass: 'swal-popup-wide',
     preConfirm: () => {
-      const name = document.getElementById('swal-proj-name').value;
-      const folderPath = document.getElementById('swal-proj-folder').value;
-      const sourceBranch = document.getElementById('swal-proj-source').value;
-      const targetBranch = document.getElementById('swal-proj-target').value;
+      const popup = Swal.getPopup();
+      const name = popup.querySelector('#swal-proj-name').value;
+      const folderPath = popup.querySelector('#swal-proj-folder').value;
+      const sourceBranch = popup.querySelector('#swal-proj-source').value;
+      const targetBranch = popup.querySelector('#swal-proj-target').value;
 
       if (!name || !folderPath || !sourceBranch || !targetBranch) {
         Swal.showValidationMessage('All fields are required');
@@ -109,8 +110,8 @@ function showProjectForm(project = null) {
         folderPath,
         sourceBranch,
         targetBranch,
-        composeFile: document.getElementById('swal-proj-compose').value || 'docker-compose.yml',
-        dockerRebuild: document.getElementById('swal-proj-docker').checked
+        composeFile: popup.querySelector('#swal-proj-compose').value || 'docker-compose.yml',
+        dockerRebuild: popup.querySelector('#swal-proj-docker').checked
       };
     }
   }).then(async (result) => {
