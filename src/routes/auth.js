@@ -53,10 +53,13 @@ router.post('/logout', (req, res) => {
 
 router.get('/status', (req, res) => {
   if (req.session && req.session.user) {
+    const accounts = loadAccounts();
+    const account = accounts.find(a => a.username === req.session.user.username);
+    const isAdmin = account && (account.admin || accounts[0].username === account.username);
     return res.json({
       loggedIn: true,
       username: req.session.user.username,
-      admin: req.session.user.admin || false
+      admin: isAdmin
     });
   }
   res.json({ loggedIn: false });
