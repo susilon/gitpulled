@@ -10,6 +10,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --production
 
+ARG BUILD_TIME=1
 COPY . .
 
 EXPOSE 3000
