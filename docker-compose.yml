@@ -8,6 +8,7 @@ services:
       - "3000:3000"
     volumes:
       - ./data:/app/data
+      - ./public:/app/public
       # Bind mount your host folders here so the container can access them
       # Add each project's git repo folder, e.g.:
       # - /home/user/projects/my-repo:/home/user/projects/my-repo
