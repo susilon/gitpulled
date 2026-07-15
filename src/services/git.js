@@ -23,7 +23,7 @@ function getTokenUrl(url) {
   const token = getGithubToken();
   if (!token || !url) return url;
   if (url.startsWith('https://') && !url.includes('@')) {
-    return url.replace('https://', `https://${token}@`);
+    return url.replace('https://', `https://${token}:@`);
   }
   return url;
 }
