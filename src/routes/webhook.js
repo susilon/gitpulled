@@ -27,7 +27,8 @@ router.post('/:token', async (req, res) => {
     const result = await triggerGitOperations(
       project.folderPath,
       project.sourceBranch,
-      project.targetBranch
+      project.targetBranch,
+      project.gitUrl
     );
 
     if (result.success && project.dockerRebuild) {

@@ -1,4 +1,5 @@
 const simpleGit = require('simple-git');
+const fs = require('fs');
 const path = require('path');
 
 const logs = [];
@@ -11,12 +12,34 @@ function log(message) {
   console.log(entry);
 }
 
-async function triggerGitOperations(folderPath, sourceBranch, targetBranch) {
-  const git = simpleGit(folderPath);
+async function triggerGitOperations(folderPath, sourceBranch, targetBranch, gitUrl) {
   const result = { success: false, steps: [], logs: [], error: null };
 
   try {
     log(`Starting git operations on ${folderPath}`);
+
+    const isGitRepo = fs.existsSync(path.join(folderPath, '.git'));
+
+    if (!isGitRepo) {
+      if (!gitUrl) {
+        result.error = 'Directory does not exist and no git URL configured';
+        log('Error: Directory is not a git repo and no git URL provided');
+        return result;
+      }
+
+      log(`Directory is not a git repo. Cloning from ${gitUrl}...`);
+
+      const parentDir = path.dirname(folderPath);
+      if (!fs.existsSync(parentDir)) {
+        fs.mkdirSync(parentDir, { recursive: true });
+      }
+
+      await simpleGit(parentDir).clone(gitUrl, path.basename(folderPath));
+      result.steps.push('clone');
+      log('Clone complete');
+    }
+
+    const git = simpleGit(folderPath);
 
     log('Fetching from origin...');
     const fetchResult = await git.fetch('origin');
@@ -53,6 +76,7 @@ async function triggerGitOperations(folderPath, sourceBranch, targetBranch) {
     log(`Error: ${err.message}`);
 
     try {
+      const git = simpleGit(folderPath);
       await git.merge(['--abort']);
     } catch (_) {}
   }

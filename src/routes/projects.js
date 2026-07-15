@@ -28,7 +28,7 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, folderPath, sourceBranch, targetBranch, dockerRebuild: doDockerRebuild, composeFile } = req.body;
+  const { name, folderPath, sourceBranch, targetBranch, gitUrl, dockerRebuild: doDockerRebuild, composeFile } = req.body;
   if (!name || !folderPath || !sourceBranch || !targetBranch) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -40,6 +40,7 @@ router.post('/', (req, res) => {
     folderPath,
     sourceBranch,
     targetBranch,
+    gitUrl: gitUrl || '',
     dockerRebuild: doDockerRebuild || false,
     composeFile: composeFile || 'docker-compose.yml',
     webhookToken: crypto.randomBytes(16).toString('hex'),
@@ -52,7 +53,7 @@ router.post('/', (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-  const { name, folderPath, sourceBranch, targetBranch, dockerRebuild: doDockerRebuild, composeFile } = req.body;
+  const { name, folderPath, sourceBranch, targetBranch, gitUrl, dockerRebuild: doDockerRebuild, composeFile } = req.body;
   const projects = loadProjects();
   const index = projects.findIndex(p => p.id === req.params.id);
 
@@ -66,6 +67,7 @@ router.put('/:id', (req, res) => {
     folderPath: folderPath || projects[index].folderPath,
     sourceBranch: sourceBranch || projects[index].sourceBranch,
     targetBranch: targetBranch || projects[index].targetBranch,
+    gitUrl: gitUrl !== undefined ? gitUrl : projects[index].gitUrl,
     dockerRebuild: doDockerRebuild !== undefined ? doDockerRebuild : projects[index].dockerRebuild,
     composeFile: composeFile || projects[index].composeFile
   };
@@ -98,7 +100,8 @@ router.post('/:id/trigger', async (req, res) => {
     const result = await triggerGitOperations(
       project.folderPath,
       project.sourceBranch,
-      project.targetBranch
+      project.targetBranch,
+      project.gitUrl
     );
 
     if (result.success && project.dockerRebuild) {

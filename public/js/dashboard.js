@@ -76,6 +76,12 @@ function showProjectForm(project = null) {
       </div>
     </div>
     <div class="swal-form-row">
+      <div class="swal-form-group">
+        <label>Git URL (for auto-clone if folder missing)</label>
+        <input type="text" id="swal-proj-giturl" class="swal2-input" placeholder="https://github.com/user/repo.git" value="${isEdit ? esc(project.gitUrl || '') : ''}">
+      </div>
+    </div>
+    <div class="swal-form-row">
       <div class="swal-form-group" style="flex:2">
         <label>Compose File (optional)</label>
         <input type="text" id="swal-proj-compose" class="swal2-input" placeholder="docker-compose.yml" value="${isEdit ? esc(project.composeFile || 'docker-compose.yml') : 'docker-compose.yml'}">
@@ -110,6 +116,7 @@ function showProjectForm(project = null) {
         folderPath,
         sourceBranch,
         targetBranch,
+        gitUrl: popup.querySelector('#swal-proj-giturl').value,
         composeFile: popup.querySelector('#swal-proj-compose').value || 'docker-compose.yml',
         dockerRebuild: popup.querySelector('#swal-proj-docker').checked
       };
