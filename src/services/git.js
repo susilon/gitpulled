@@ -12,6 +12,22 @@ function log(message) {
   console.log(entry);
 }
 
+function getGithubToken() {
+  const settingsFile = path.join(__dirname, '../../data/settings.json');
+  if (!fs.existsSync(settingsFile)) return null;
+  const settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+  return settings.githubToken || null;
+}
+
+function getTokenUrl(url) {
+  const token = getGithubToken();
+  if (!token || !url) return url;
+  if (url.startsWith('https://')) {
+    return url.replace('https://', `https://${token}@`);
+  }
+  return url;
+}
+
 async function triggerGitOperations(folderPath, sourceBranch, targetBranch, gitUrl) {
   const result = { success: false, steps: [], logs: [], error: null };
 
@@ -34,12 +50,19 @@ async function triggerGitOperations(folderPath, sourceBranch, targetBranch, gitU
         fs.mkdirSync(parentDir, { recursive: true });
       }
 
-      await simpleGit(parentDir).clone(gitUrl, path.basename(folderPath));
+      const authUrl = getTokenUrl(gitUrl);
+      await simpleGit(parentDir).clone(authUrl, path.basename(folderPath));
       result.steps.push('clone');
       log('Clone complete');
     }
 
     const git = simpleGit(folderPath);
+
+    const token = getGithubToken();
+    if (token) {
+      log('Using token authentication for fetch');
+      await git.remote(['set-url', 'origin', getTokenUrl(await getRemoteUrl(git))]);
+    }
 
     log('Fetching from origin...');
     const fetchResult = await git.fetch('origin');
@@ -83,6 +106,11 @@ async function triggerGitOperations(folderPath, sourceBranch, targetBranch, gitU
 
   result.logs = logs.slice(-20);
   return result;
+}
+
+async function getRemoteUrl(git) {
+  const remotes = await git.remote(['get-url', 'origin']);
+  return remotes.trim();
 }
 
 function getLogs() {

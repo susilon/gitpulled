@@ -5,6 +5,7 @@ const path = require('path');
 const authRoutes = require('./src/routes/auth');
 const projectRoutes = require('./src/routes/projects');
 const webhookRoutes = require('./src/routes/webhook');
+const settingsRoutes = require('./src/routes/settings');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/settings', settingsRoutes);
 app.use('/webhook', webhookRoutes);
 
 app.get('/', (req, res) => {

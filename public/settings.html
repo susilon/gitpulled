@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoDeploy - Settings</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>AutoDeploy</h1>
+      <div class="user-info">
+        <a href="/dashboard.html" class="btn btn-sm btn-secondary">Back to Dashboard</a>
+        <button class="btn btn-sm" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Settings</h2>
+      <div class="form-group">
+        <label>GitHub Personal Access Token</label>
+        <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx">
+      </div>
+      <p style="font-size:0.85em; color:#888; margin-bottom:16px">
+        Used for private repos. Generate at GitHub → Settings → Developer settings → Personal access tokens
+      </p>
+      <button class="btn" onclick="saveToken()">Save Token</button>
+      <div id="msg" class="error"></div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>
