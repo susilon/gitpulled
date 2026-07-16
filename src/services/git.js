@@ -72,8 +72,14 @@ async function triggerGitOperations(folderPath, sourceBranch, targetBranch, gitU
       log(`Checking out existing local branch: ${targetBranch}`);
       await git.checkout(targetBranch);
     } else {
-      log(`Local branch ${targetBranch} not found. Creating from origin/${targetBranch}...`);
-      await git.checkout(['-b', targetBranch, `origin/${targetBranch}`]);
+      const remoteBranches = await git.branch(['-r']);
+      if (remoteBranches.all.includes(`origin/${targetBranch}`)) {
+        log(`Creating local branch ${targetBranch} from origin/${targetBranch}...`);
+        await git.checkout(['-b', targetBranch, `origin/${targetBranch}`]);
+      } else {
+        log(`Creating new local branch: ${targetBranch}`);
+        await git.checkout(['-b', targetBranch]);
+      }
     }
     result.steps.push(`checkout ${targetBranch}`);
 
