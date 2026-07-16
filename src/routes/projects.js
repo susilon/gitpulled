@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { triggerGitOperations } = require('../services/git');
-const { dockerRebuild } = require('../services/docker');
+const { dockerCompose } = require('../services/docker');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -28,7 +28,7 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, folderPath, sourceBranch, targetBranch, gitUrl, dockerRebuild: doDockerRebuild, composeFile } = req.body;
+  const { name, folderPath, sourceBranch, targetBranch, gitUrl, dockerAction, composeFile } = req.body;
   if (!name || !folderPath || !sourceBranch || !targetBranch) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -41,7 +41,7 @@ router.post('/', (req, res) => {
     sourceBranch,
     targetBranch,
     gitUrl: gitUrl || '',
-    dockerRebuild: doDockerRebuild || false,
+    dockerAction: dockerAction || 'none',
     composeFile: composeFile || 'docker-compose.yml',
     webhookToken: crypto.randomBytes(16).toString('hex'),
     createdAt: new Date().toISOString()
@@ -53,7 +53,7 @@ router.post('/', (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-  const { name, folderPath, sourceBranch, targetBranch, gitUrl, dockerRebuild: doDockerRebuild, composeFile } = req.body;
+  const { name, folderPath, sourceBranch, targetBranch, gitUrl, dockerAction, composeFile } = req.body;
   const projects = loadProjects();
   const index = projects.findIndex(p => p.id === req.params.id);
 
@@ -68,7 +68,7 @@ router.put('/:id', (req, res) => {
     sourceBranch: sourceBranch || projects[index].sourceBranch,
     targetBranch: targetBranch || projects[index].targetBranch,
     gitUrl: gitUrl !== undefined ? gitUrl : projects[index].gitUrl,
-    dockerRebuild: doDockerRebuild !== undefined ? doDockerRebuild : projects[index].dockerRebuild,
+    dockerAction: dockerAction || projects[index].dockerAction || 'none',
     composeFile: composeFile || projects[index].composeFile
   };
 
@@ -104,12 +104,13 @@ router.post('/:id/trigger', async (req, res) => {
       project.gitUrl
     );
 
-    if (result.success && project.dockerRebuild) {
+    const dockerAction = project.dockerAction || 'none';
+    if (result.success && dockerAction !== 'none') {
       try {
-        await dockerRebuild(project.folderPath, project.composeFile);
-        result.dockerRebuild = true;
+        await dockerCompose(project.folderPath, project.composeFile, dockerAction);
+        result.dockerAction = dockerAction;
       } catch (dockerErr) {
-        result.dockerRebuild = false;
+        result.dockerAction = dockerAction;
         result.dockerError = dockerErr.message;
       }
     }

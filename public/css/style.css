@@ -276,3 +276,19 @@ code {
 .swal-popup-wide .swal2-html {
   color: #333 !important;
 }
+
+.swal2-select {
+  width: 100%;
+  font-size: 14px;
+  padding: 8px 12px;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.swal2-select:focus {
+  border-color: #e94560;
+  box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.2);
+  outline: none;
+}

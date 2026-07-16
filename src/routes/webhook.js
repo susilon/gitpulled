@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { triggerGitOperations } = require('../services/git');
-const { dockerRebuild } = require('../services/docker');
+const { dockerCompose } = require('../services/docker');
 
 const router = express.Router();
 const DATA_FILE = path.join(__dirname, '../../data/projects.json');
@@ -31,12 +31,13 @@ router.post('/:token', async (req, res) => {
       project.gitUrl
     );
 
-    if (result.success && project.dockerRebuild) {
+    const dockerAction = project.dockerAction || 'none';
+    if (result.success && dockerAction !== 'none') {
       try {
-        await dockerRebuild(project.folderPath, project.composeFile);
-        result.dockerRebuild = true;
+        await dockerCompose(project.folderPath, project.composeFile, dockerAction);
+        result.dockerAction = dockerAction;
       } catch (dockerErr) {
-        result.dockerRebuild = false;
+        result.dockerAction = dockerAction;
         result.dockerError = dockerErr.message;
       }
     }

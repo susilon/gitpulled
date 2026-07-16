@@ -30,12 +30,15 @@ function renderProjects() {
     return;
   }
 
-  el.innerHTML = projects.map(p => `
+  el.innerHTML = projects.map(p => {
+    const dockerLabel = p.dockerAction === 'rebuild' ? 'Docker: Rebuild' :
+                        p.dockerAction === 'restart' ? 'Docker: Restart' : '';
+    return `
     <div class="project-item">
       <h3>${esc(p.name)}</h3>
       <div class="project-detail">Folder: ${esc(p.folderPath)}</div>
       <div class="project-detail">Source: ${esc(p.sourceBranch)} → Target: ${esc(p.targetBranch)}</div>
-      ${p.dockerRebuild ? '<div class="project-detail">Docker: Rebuild after merge</div>' : ''}
+      ${dockerLabel ? `<div class="project-detail">${dockerLabel}</div>` : ''}
       <div class="project-detail">Webhook: <span class="webhook-token">${esc(p.webhookToken)}</span></div>
       <div class="project-actions">
         <button class="btn btn-sm" onclick="triggerProject('${p.id}')">Trigger</button>
@@ -43,7 +46,7 @@ function renderProjects() {
         <button class="btn btn-sm btn-danger" onclick="deleteProject('${p.id}')">Delete</button>
       </div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 function esc(str) {
@@ -54,6 +57,7 @@ function esc(str) {
 
 function showProjectForm(project = null) {
   const isEdit = project !== null;
+  const currentAction = isEdit ? (project.dockerAction || 'none') : 'none';
   const html = `
     <div class="swal-form-row">
       <div class="swal-form-group">
@@ -83,12 +87,16 @@ function showProjectForm(project = null) {
     </div>
     <div class="swal-form-row">
       <div class="swal-form-group" style="flex:2">
-        <label>Compose File (optional)</label>
+        <label>Compose File</label>
         <input type="text" id="swal-proj-compose" class="swal2-input" placeholder="docker-compose.yml" value="${isEdit ? esc(project.composeFile || 'docker-compose.yml') : 'docker-compose.yml'}">
       </div>
-      <div class="swal-form-group" style="flex:1; display:flex; align-items:center; gap:8px; padding-top:24px">
-        <input type="checkbox" id="swal-proj-docker" ${isEdit && project.dockerRebuild ? 'checked' : ''}>
-        <label for="swal-proj-docker" style="margin:0; font-size:0.9em; color:#aaa">Docker Rebuild</label>
+      <div class="swal-form-group" style="flex:1">
+        <label>Docker Action</label>
+        <select id="swal-proj-docker" class="swal2-select">
+          <option value="none" ${currentAction === 'none' ? 'selected' : ''}>None</option>
+          <option value="restart" ${currentAction === 'restart' ? 'selected' : ''}>Restart</option>
+          <option value="rebuild" ${currentAction === 'rebuild' ? 'selected' : ''}>Rebuild</option>
+        </select>
       </div>
     </div>
   `;
@@ -118,7 +126,7 @@ function showProjectForm(project = null) {
         targetBranch,
         gitUrl: popup.querySelector('#swal-proj-giturl').value,
         composeFile: popup.querySelector('#swal-proj-compose').value || 'docker-compose.yml',
-        dockerRebuild: popup.querySelector('#swal-proj-docker').checked
+        dockerAction: popup.querySelector('#swal-proj-docker').value
       };
     }
   }).then(async (result) => {
@@ -179,7 +187,8 @@ async function triggerProject(id) {
 
   if (data.success) {
     let msg = 'Git operations completed';
-    if (data.dockerRebuild) msg += ' + Docker rebuild';
+    if (data.dockerAction === 'rebuild') msg += ' + Docker rebuild';
+    else if (data.dockerAction === 'restart') msg += ' + Docker restart';
     Swal.fire('Success', msg, 'success');
   } else {
     Swal.fire('Error', data.error || 'Unknown error', 'error');
